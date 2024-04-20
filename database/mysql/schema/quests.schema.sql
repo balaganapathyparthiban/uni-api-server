@@ -1,0 +1,27 @@
+-- Active: 1712951636808@@localhost@3306@UNSEEN_DB
+-- @block CREATE QUESTS TABLE
+CREATE TABLE IF NOT EXISTS `QUESTS` (
+    `questId` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(256) NOT NULL,
+    `about` TEXT,
+    `location` VARCHAR(128) NOT NULL,
+    `coordinate` TEXT NOT NULL,
+    `minParticipants` BIGINT UNSIGNED NOT NULL,
+    `maxParticipants` BIGINT UNSIGNED NOT NULL,
+    `startedAt` DATETIME NOT NULL,
+    `endedAt` DATETIME NOT NULL,
+    `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `status` ENUM(
+        'AWAITING',
+        'STARTED',
+        'ENDED'
+    ) NOT NULL DEFAULT 'AWAITING',
+    -- CONSTRAINTS
+    PRIMARY KEY pk_questid (`questId`),
+    INDEX idx_name (`name`),
+    INDEX idx_quest_location (`location`)
+) ENGINE = InnoDB;
+
+-- @block SET AUTO AUTO_INCREMENT INITIAL VALUE 1001
+ALTER TABLE `QUESTS` AUTO_INCREMENT = 1001;
