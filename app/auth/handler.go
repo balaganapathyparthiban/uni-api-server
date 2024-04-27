@@ -25,8 +25,8 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-// Google Auth Login Handler
-func GoogleAuthLogin(c *fiber.Ctx) error {
+// Google Login Handler
+func GoogleLogin(c *fiber.Ctx) error {
 	oAuth2Config := oauth2.Config{
 		RedirectURL:  config.Getenv("GOOGLE_OAUTH_REDIRECT_URL"),
 		ClientID:     config.Getenv("GOOGLE_OAUTH_CLIENT_ID"),
@@ -36,15 +36,15 @@ func GoogleAuthLogin(c *fiber.Ctx) error {
 	}
 	url := oAuth2Config.AuthCodeURL("unistate")
 
-	return c.Status(200).JSON(model.DataResponse{
+	return c.Status(fiber.StatusOK).JSON(&model.DataResponse{
 		Success: true,
-		Result: fiber.Map{
+		Result: &fiber.Map{
 			"url": url,
 		},
 	})
 }
 
-// Google Auth Login Web Callback Handler
+// Google Login Web Callback Handler
 func GoogleLoginWebCallback(c *fiber.Ctx) error {
 	state := c.Query("state")
 	if state != "unistate" {
@@ -83,18 +83,23 @@ func GoogleLoginWebCallback(c *fiber.Ctx) error {
 	// return c.Status(308).Redirect(
 	// 	fmt.Sprintf("%s?data=%s", "uniuserapp://uniuserapp.io", code),
 	// )
-	return c.JSON(userData)
+	return c.Status(fiber.StatusOK).JSON(&model.DataResponse{
+		Success: true,
+		Result:  &userData,
+	})
 }
 
-// Google Auth Login Native Callback Handler
+// Google Login Native Callback Handler
 func GoogleLoginNativeCallback(c *fiber.Ctx) error {
-	fingerprint := c.GetReqHeaders()[constant.HEADER_X_FINGER_PRINT][0]
-	if fingerprint == "" {
-		return c.Status(401).JSON(model.ErrorResponse{
+	fingerprint := c.GetReqHeaders()[constant.HEADER_X_FINGER_PRINT]
+	if fingerprint == nil || (len(fingerprint) > 0 && fingerprint[0] == "") {
+		// @Exception E1
+		return c.Status(fiber.StatusBadRequest).JSON(&model.ErrorResponse{
 			Success: false,
-			Error: model.Error{
-				Code:   "INVALID_CREDENTIAL",
-				Reason: "Invalid credential",
+			Error: &model.Error{
+				Code:    fiber.ErrBadRequest.Code,
+				Message: fiber.ErrBadRequest.Message,
+				Reason:  "E1",
 			},
 		})
 	}
@@ -103,13 +108,27 @@ func GoogleLoginNativeCallback(c *fiber.Ctx) error {
 
 	// Validate Request Body
 	c.BodyParser(body)
-	if err := middleware.ValidateRequest(body); err != "" {
-		c.SendStatus(fiber.ErrBadRequest.Code)
-		return c.JSON(model.ErrorResponse{
+	if err := middleware.ValidateRequest(body); len(err) > 0 {
+		// @Exception E2
+		return c.Status(fiber.StatusBadRequest).JSON(&model.ErrorResponse{
 			Success: false,
-			Error: model.Error{
-				Code:   fiber.ErrBadRequest.Message,
-				Reason: err,
+			Error: &model.Error{
+				Code:       fiber.ErrBadRequest.Code,
+				Message:    fiber.ErrBadRequest.Message,
+				Validation: err,
+				Reason:     "E2",
+			},
+		})
+	}
+
+	if body.DeviceType != "android" || body.DeviceType == "ios" {
+		// @Exception E3
+		return c.Status(fiber.StatusUnauthorized).JSON(&model.ErrorResponse{
+			Success: false,
+			Error: &model.Error{
+				Code:    fiber.ErrUnauthorized.Code,
+				Message: fiber.ErrUnauthorized.Message,
+				Reason:  "E3",
 			},
 		})
 	}
@@ -123,11 +142,13 @@ func GoogleLoginNativeCallback(c *fiber.Ctx) error {
 	}
 	token, err := oAuth2Config.Exchange(context.Background(), body.Code)
 	if err != nil {
-		return c.Status(401).JSON(model.ErrorResponse{
+		// @Exception E4
+		return c.Status(fiber.StatusUnauthorized).JSON(&model.ErrorResponse{
 			Success: false,
-			Error: model.Error{
-				Code:   "INVALID_CODE",
-				Reason: "Invalid code",
+			Error: &model.Error{
+				Code:    fiber.ErrUnauthorized.Code,
+				Message: fiber.ErrUnauthorized.Message,
+				Reason:  "E4",
 			},
 		})
 	}
@@ -136,22 +157,26 @@ func GoogleLoginNativeCallback(c *fiber.Ctx) error {
 		fmt.Sprintf("%s?access_token=%s", config.Getenv("GOOGLE_OAUTH_USERINFO_ENDPOINT"), token.AccessToken),
 	)
 	if err != nil {
-		return c.Status(401).JSON(model.ErrorResponse{
+		// @Exception E5
+		return c.Status(fiber.StatusUnauthorized).JSON(&model.ErrorResponse{
 			Success: false,
-			Error: model.Error{
-				Code:   "INVALID_TOKEN",
-				Reason: "Invalid token",
+			Error: &model.Error{
+				Code:    fiber.ErrUnauthorized.Code,
+				Message: fiber.ErrUnauthorized.Message,
+				Reason:  "E5",
 			},
 		})
 	}
 
 	userData, err := io.ReadAll(response.Body)
 	if err != nil {
-		return c.Status(500).JSON(model.ErrorResponse{
+		// @Exception E6
+		return c.Status(fiber.StatusInternalServerError).JSON(&model.ErrorResponse{
 			Success: false,
-			Error: model.Error{
-				Code:   "FAILED_TO_PARSE_BODY",
-				Reason: "Failed to parse body",
+			Error: &model.Error{
+				Code:    fiber.ErrInternalServerError.Code,
+				Message: fiber.ErrInternalServerError.Message,
+				Reason:  "E6",
 			},
 		})
 	}
@@ -159,19 +184,19 @@ func GoogleLoginNativeCallback(c *fiber.Ctx) error {
 	var userInfo = &model.GoogleAuthResponse{}
 	err = json.Unmarshal(userData, &userInfo)
 	if err != nil {
-		return c.Status(500).JSON(model.ErrorResponse{
+		// @Exception E7
+		return c.Status(fiber.StatusInternalServerError).JSON(&model.ErrorResponse{
 			Success: false,
-			Error: model.Error{
-				Code:   "FAILED_TO_UNMARSHALL_DATA",
-				Reason: "Failed to unmarshall data",
+			Error: &model.Error{
+				Code:    fiber.ErrInternalServerError.Code,
+				Message: fiber.ErrInternalServerError.Message,
+				Reason:  "E7",
 			},
 		})
 	}
 
 	fingerprintHash := sha512.New()
-	fingerprintHash.Write([]byte(fingerprint))
-
-	deviceId := primitive.NewObjectID()
+	fingerprintHash.Write([]byte(fingerprint[0]))
 
 	singleResult := mongo.Collection.Users.FindOneAndUpdate(
 		context.Background(),
@@ -182,62 +207,71 @@ func GoogleLoginNativeCallback(c *fiber.Ctx) error {
 		bson.M{
 			"$set": bson.M{
 				"device": bson.M{
-					"_id":      deviceId,
+					"_id":      primitive.NewObjectID(),
 					"name":     body.DeviceName,
 					"fcmToken": body.FcmToken,
 				},
-				"language":  body.Language,
-				"updatedAt": time.Now().UTC(),
-				"status":    model.Status.Active,
+				"isRegistered": false,
+				"language":     body.Language,
+				"updatedAt":    time.Now().UTC(),
+				"status":       model.Status.Active,
 			},
 		},
 		options.FindOneAndUpdate().SetUpsert(true),
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	)
 	if singleResult.Err() != nil {
-		return c.Status(500).JSON(model.ErrorResponse{
+		// @Exception E7
+		return c.Status(fiber.StatusInternalServerError).JSON(&model.ErrorResponse{
 			Success: false,
-			Error: model.Error{
-				Code:   "FAILED_TO_UPDATE_USER",
-				Reason: "Failed to update user",
+			Error: &model.Error{
+				Code:    fiber.ErrInternalServerError.Code,
+				Message: fiber.ErrInternalServerError.Message,
+				Reason:  "E7",
 			},
 		})
 	}
 
-	var updatedUser model.User
+	var updatedUser *model.User
 	singleResult.Decode(&updatedUser)
 
-	accessToken, err := utils.GenerateAccessToken(model.AccessTokenPayload{
+	fmt.Printf("Device ID %v \n", updatedUser.Device.ID)
+
+	accessToken, err := utils.GenerateAccessToken(&model.AccessTokenPayload{
 		Id:          updatedUser.ID.Hex(),
-		Type:        constant.TOKEN_TYPE_USER,
 		GoogleId:    userInfo.ID,
-		DeviceId:    deviceId.Hex(),
+		DeviceId:    updatedUser.Device.ID.Hex(),
+		Type:        constant.TOKEN_TYPE_USER,
 		FingerPrint: hex.EncodeToString(fingerprintHash.Sum(nil))[32:64],
 	})
 	if err != nil {
-		return c.Status(500).JSON(model.ErrorResponse{
+		// @Exception E8
+		return c.Status(fiber.StatusInternalServerError).JSON(&model.ErrorResponse{
 			Success: false,
-			Error: model.Error{
-				Code:   "FAILED_TO_GENERATE_TOKEN",
-				Reason: "Failed to generate token",
+			Error: &model.Error{
+				Code:    fiber.ErrInternalServerError.Code,
+				Message: fiber.ErrInternalServerError.Message,
+				Reason:  "E8",
 			},
 		})
 	}
 
-	return c.Status(200).JSON(model.DataResponse{
+	fmt.Printf("%v token", accessToken)
+
+	c.Set(constant.HEADER_X_EXPOSE_ACCESS_TOKEN, accessToken)
+	return c.Status(fiber.StatusOK).JSON(&model.DataResponse{
 		Success: true,
-		Result: bson.M{
-			"accessToken": accessToken,
-		},
+		Result:  utils.ConstructUserInfo(updatedUser),
 	})
 }
 
-// Get App Info Handler
-func GetAppInfo(c *fiber.Ctx) error {
+// App Info Handler
+func AppInfo(c *fiber.Ctx) error {
 	jsonData := make(map[string]interface{})
 	json.Unmarshal([]byte(`{
 			"languages": [
 				{"code": "en", "name": "English"},
+				{"code": "ta", "name": "தமிழ்"},
 				{"code": "as", "name": "অসমীয়া"},
 				{"code": "bn", "name": "বাংলা"},
 				{"code": "gu", "name": "ગુજરાતી"},
@@ -248,14 +282,13 @@ func GetAppInfo(c *fiber.Ctx) error {
 				{"code": "or", "name": "ଓଡ଼ିଆ"},
 				{"code": "pa", "name": "ਪੰਜਾਬੀ"},
 				{"code": "sa", "name": "संस्कृतम्"},
-				{"code": "ta", "name": "தமிழ்"},
 				{"code": "te", "name": "తెలుగు"},
 				{"code": "ur", "name": "اردو"}
 		]
 		}`), &jsonData)
 
-	return c.Status(200).JSON(model.DataResponse{
+	return c.Status(fiber.StatusOK).JSON(&model.DataResponse{
 		Success: true,
-		Result:  jsonData,
+		Result:  &jsonData,
 	})
 }

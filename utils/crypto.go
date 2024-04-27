@@ -74,7 +74,8 @@ var privateKey = ParsePrivateKey(config.Getenv("JWT_PRIVATE_KEy"))
 var signer = MakeSigner(jose.ES256, privateKey)
 var secretKey = []byte(config.Getenv("JWT_SECRET_KEY"))[8:32]
 
-func GenerateAccessToken(payload model.AccessTokenPayload) (string, error) {
+func GenerateAccessToken(payload *model.AccessTokenPayload) (string, error) {
+	fmt.Printf("Generate Access Token %v \n", payload.DeviceId)
 	enc, err := jose.NewEncrypter(jose.A256GCM, jose.Recipient{
 		Algorithm: jose.A256GCMKW,
 		Key:       secretKey,
@@ -111,6 +112,7 @@ func VerifyAccessToken(accessToken string) (*model.AccessTokenPayload, error) {
 	if err := nested.Claims(&privateKey.PublicKey, &payload); err != nil {
 		return nil, err
 	}
+	fmt.Printf("Verify Access Token %v \n", payload.DeviceId)
 
 	return payload, nil
 }

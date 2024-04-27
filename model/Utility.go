@@ -1,8 +1,31 @@
 package model
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
+type Coordinate = [2]int
+
+type GeoLocation struct {
+	Type        string      `json:"type"`
+	Coordinates *Coordinate `json:"coordinates"`
+}
+
 type Location struct {
-	Type        string `json:"type"`
-	Coordinates []int  `json:"coordinates"`
+	Area        string      `json:"area"`
+	City        string      `json:"city"`
+	State       string      `json:"state"`
+	Country     string      `json:"country"`
+	Coordinates *Coordinate `json:"coordinates"`
+}
+
+type Address struct {
+	Tag         string      `json:"tag"`
+	DoorNo      string      `json:"doorNo"`
+	Street      string      `json:"street"`
+	City        string      `json:"city"`
+	State       string      `json:"state"`
+	Country     string      `json:"country"`
+	Landmark    string      `json:"landmark"`
+	Coordinates *Coordinate `json:"coordinates"`
 }
 
 type Phone struct {
@@ -11,9 +34,9 @@ type Phone struct {
 }
 
 type Device struct {
-	ID       string `bson:"_id,omitempty" json:"_id,omitempty"`
-	Name     string `bson:"device,omitempty" json:"device,omitempty"`
-	FcmToken string `bson:"fcmToken,omitempty" json:"fcmToken,omitempty"`
+	ID       *primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Name     string              `bson:"device,omitempty" json:"device,omitempty"`
+	FcmToken string              `bson:"fcmToken,omitempty" json:"fcmToken,omitempty"`
 }
 
 var Status = &struct {

@@ -17,16 +17,28 @@ import (
 )
 
 func main() {
-	// Init Config
+	/*############
+	### CONFIG ###
+	##############*/
+
 	config.Init()
 
-	// Connect To Database
+	/*##############
+	### DATABASE ###
+	################*/
+
 	mongo.ConnectMongoDB()
 
-	// Connect Memcached
+	/*###########
+	### CACHE ###
+	#############*/
+
 	memcached.ConnectMemcached()
 
-	// Init Fiber
+	/*################
+	### FIBER INIT ###
+	##################*/
+
 	app := fiber.New(fiber.Config{
 		BodyLimit:         2 * 1024 * 1024,
 		JSONEncoder:       json.Marshal,
@@ -34,7 +46,9 @@ func main() {
 		ReduceMemoryUsage: true,
 	})
 
-	/* Middlewares */
+	/*#################
+	### MIDDLEWARES ###
+	###################*/
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: strings.Join(
@@ -72,37 +86,25 @@ func main() {
 
 	app.Use(helmet.New())
 
-	/* Middlewares */
+	/*##############
+	### ROUTES #####
+	################*/
 
-	/* ROUTES */
-
-	// Health Check API
 	app.Get("/healthcheck", func(c *fiber.Ctx) error {
 		return c.SendString("OK")
 	})
 
-	// API Group
 	api := app.Group("/api")
 
-	// Auth Routes
 	auth.SetupAuthRoute(api)
 
-	// User Routes
 	user.SetupUserRoute(api)
 
-	// Web Socket Routes
 	ws.SetupWebSocketRoute(api)
 
-	/* ROUTES */
+	/*###############
+	### APP START ###
+	#################*/
 
-	// APP Listen
 	app.Listen(":3000")
-}
-
-func setupMiddlewares(app *fiber.App) {
-
-}
-
-func setupRoutes(app *fiber.App) {
-
 }

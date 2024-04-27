@@ -16,24 +16,26 @@ func AuthenticateRequest(role []string) func(c *fiber.Ctx) error {
 		timeStamp := c.Get(constant.HEADER_X_TIME_STAMP)
 
 		if accessToken == "" || timeStamp == "" {
-			c.SendStatus(fiber.ErrUnauthorized.Code)
-			return c.JSON(model.ErrorResponse{
+			// @Token Exception TE1
+			return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResponse{
 				Success: false,
-				Error: model.Error{
-					Code:   fiber.ErrUnauthorized.Message,
-					Reason: "Invalid access token",
+				Error: &model.Error{
+					Code:    fiber.ErrUnauthorized.Code,
+					Message: fiber.ErrUnauthorized.Message,
+					Reason:  "TE1",
 				},
 			})
 		}
 
 		payload, err := utils.VerifyAccessToken(accessToken)
 		if err != nil || payload == nil || !slices.Contains(role, payload.Type) {
-			c.SendStatus(fiber.ErrUnauthorized.Code)
-			return c.JSON(model.ErrorResponse{
+			// @Token Exception TE2
+			return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResponse{
 				Success: false,
-				Error: model.Error{
-					Code:   fiber.ErrUnauthorized.Message,
-					Reason: "Invalid access token",
+				Error: &model.Error{
+					Code:    fiber.ErrUnauthorized.Code,
+					Message: fiber.ErrUnauthorized.Message,
+					Reason:  "TE2",
 				},
 			})
 		}

@@ -10,3 +10,5 @@ db.getCollection("USERS").createIndex(
   { "phone.code": 1, "phone.number": 1 },
   { unique: true }
 );
+
+db.getCollection("USERS").createIndex({ 'device._id': 1 });

@@ -10,7 +10,7 @@ func SetupAuthRoute(router fiber.Router) {
 	// UnAuthorized Routes
 	auth.Get(
 		"/google/login",
-		GoogleAuthLogin,
+		GoogleLogin,
 	)
 
 	auth.Get(
@@ -23,5 +23,5 @@ func SetupAuthRoute(router fiber.Router) {
 		GoogleLoginNativeCallback,
 	)
 
-	auth.Get("/app/info", GetAppInfo)
+	auth.Get("/app/info", AppInfo)
 }

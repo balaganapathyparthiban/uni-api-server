@@ -8,13 +8,15 @@ type DataResponse struct {
 }
 
 type ErrorResponse struct {
-	Success bool  `json:"success"`
-	Error   Error `json:"error"`
+	Success bool   `json:"success"`
+	Error   *Error `json:"error"`
 }
 
 type Error struct {
-	Code   string `json:"code"`
-	Reason string `json:"reason"`
+	Code       int      `json:"code"`
+	Message    string   `json:"message"`
+	Validation []string `json:"validation"`
+	Reason     string   `json:"reason"`
 }
 
 type AccessTokenPayload struct {

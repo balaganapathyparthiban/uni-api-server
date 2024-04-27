@@ -15,4 +15,14 @@ func SetupUserRoute(router fiber.Router) {
 		middleware.AuthenticateRequest([]string{constant.TOKEN_TYPE_USER}),
 		GetUserInfo,
 	)
+	user.Post(
+		"/profile",
+		middleware.AuthenticateRequest([]string{constant.TOKEN_TYPE_USER}),
+		UpdateUserProfile,
+	)
+	user.Post(
+		"/profile/registered",
+		middleware.AuthenticateRequest([]string{constant.TOKEN_TYPE_USER}),
+		updateUserProfileRegistered,
+	)
 }

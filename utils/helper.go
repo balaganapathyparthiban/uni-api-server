@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"dev.balaganapathy/uni-server/model"
+	"github.com/gofiber/fiber/v2"
 )
 
 func ParseBufferFromMultipartFile(file *multipart.FileHeader) (*bytes.Buffer, error) {
@@ -66,4 +67,17 @@ func GetRouteFromValhalla(body *model.ValhallaRequestBody) (*model.ValhallaRoute
 	}
 
 	return parsedBody, nil
+}
+
+func ConstructUserInfo(userInfo *model.User) *fiber.Map {
+	return &fiber.Map{
+		"_id":          &userInfo.ID,
+		"email":        &userInfo.Email,
+		"avatar":       &userInfo.Avatar,
+		"fullName":     &userInfo.FullName,
+		"phone":        &userInfo.Phone,
+		"isRegistered": &userInfo.IsRegistered,
+		"language":     &userInfo.Language,
+		"status":       &userInfo.Status,
+	}
 }

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -10,7 +9,7 @@ import (
 var validate = validator.New()
 
 // Validate Request Body, Query OR Params
-func ValidateRequest(data interface{}) string {
+func ValidateRequest(data interface{}) []string {
 	errMsgs := make([]string, 0)
 
 	errs := validate.Struct(data)
@@ -26,5 +25,5 @@ func ValidateRequest(data interface{}) string {
 		}
 	}
 
-	return strings.Join(errMsgs, ", ")
+	return errMsgs
 }
