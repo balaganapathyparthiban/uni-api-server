@@ -3,9 +3,9 @@ package middleware
 import (
 	"slices"
 
-	"dev.balaganapathy/uni-server/constant"
-	"dev.balaganapathy/uni-server/model"
-	"dev.balaganapathy/uni-server/utils"
+	"dev.balaganapathy/uni-api-server/constant"
+	"dev.balaganapathy/uni-api-server/model"
+	"dev.balaganapathy/uni-api-server/utils"
 	"github.com/gofiber/fiber/v2"
 )
 

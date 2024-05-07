@@ -3,7 +3,7 @@ package memcached
 import (
 	"fmt"
 
-	"dev.balaganapathy/uni-server/config"
+	"dev.balaganapathy/uni-api-server/config"
 	"github.com/bradfitz/gomemcache/memcache"
 )
 

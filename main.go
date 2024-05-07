@@ -3,13 +3,13 @@ package main
 import (
 	"strings"
 
-	"dev.balaganapathy/uni-server/app/auth"
-	"dev.balaganapathy/uni-server/app/user"
-	"dev.balaganapathy/uni-server/app/ws"
-	"dev.balaganapathy/uni-server/config"
-	"dev.balaganapathy/uni-server/constant"
-	"dev.balaganapathy/uni-server/database/memcached"
-	"dev.balaganapathy/uni-server/database/mongo"
+	"dev.balaganapathy/uni-api-server/app/auth"
+	"dev.balaganapathy/uni-api-server/app/user"
+	"dev.balaganapathy/uni-api-server/app/ws"
+	"dev.balaganapathy/uni-api-server/config"
+	"dev.balaganapathy/uni-api-server/constant"
+	"dev.balaganapathy/uni-api-server/database/memcached"
+	"dev.balaganapathy/uni-api-server/database/mongo"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -22,6 +22,8 @@ func main() {
 	##############*/
 
 	config.Init()
+
+	return
 
 	/*##############
 	### DATABASE ###

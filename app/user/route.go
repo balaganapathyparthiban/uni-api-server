@@ -1,8 +1,8 @@
 package user
 
 import (
-	"dev.balaganapathy/uni-server/constant"
-	"dev.balaganapathy/uni-server/middleware"
+	"dev.balaganapathy/uni-api-server/constant"
+	"dev.balaganapathy/uni-api-server/middleware"
 	"github.com/gofiber/fiber/v2"
 )
 

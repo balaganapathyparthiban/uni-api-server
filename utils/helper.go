@@ -8,7 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"dev.balaganapathy/uni-server/model"
+	"dev.balaganapathy/uni-api-server/model"
 	"github.com/gofiber/fiber/v2"
 )
 

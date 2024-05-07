@@ -1,4 +1,4 @@
-module dev.balaganapathy/uni-server
+module dev.balaganapathy/uni-api-server
 
 go 1.21.6
 

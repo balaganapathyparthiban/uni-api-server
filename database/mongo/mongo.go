@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"dev.balaganapathy/uni-server/config"
+	"dev.balaganapathy/uni-api-server/config"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
