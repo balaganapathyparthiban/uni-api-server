@@ -3,6 +3,7 @@ package middleware
 import (
 	"slices"
 
+	"dev.balaganapathy/uni-api-server/config"
 	"dev.balaganapathy/uni-api-server/constant"
 	"dev.balaganapathy/uni-api-server/model"
 	"dev.balaganapathy/uni-api-server/utils"
@@ -27,7 +28,12 @@ func AuthenticateRequest(role []string) func(c *fiber.Ctx) error {
 			})
 		}
 
-		payload, err := utils.VerifyAccessToken(accessToken)
+		payload, err := utils.VerifyAccessToken(&utils.AccessTokenArgs{
+			AccessToken: accessToken,
+			Jwks:        config.Getenv("JWT_PUBLIC_KEY"),
+			Kid:         config.Getenv("JWT_KID"),
+			Secret:      config.Getenv("JWT_SECRET_KEY"),
+		})
 		if err != nil || payload == nil || !slices.Contains(role, payload.Type) {
 			// @Token Exception TE2
 			return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResponse{

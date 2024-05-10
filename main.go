@@ -23,8 +23,6 @@ func main() {
 
 	config.Init()
 
-	return
-
 	/*##############
 	### DATABASE ###
 	################*/

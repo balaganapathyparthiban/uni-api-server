@@ -211,16 +211,13 @@ func GoogleLoginNativeCallback(c *fiber.Ctx) error {
 					"name":     body.DeviceName,
 					"fcmToken": body.FcmToken,
 				},
-				"isRegistered": false,
-				"language":     body.Language,
-				"updatedAt":    time.Now().UTC(),
-				"status":       model.Status.Active,
+				"updatedAt": time.Now().UTC(),
+				"status":    model.Status.Active,
 			},
 		},
-		options.FindOneAndUpdate().SetUpsert(true),
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	)
-	if singleResult.Err() != nil {
+	if singleResult.Err() != nil && singleResult.Err().Error() != "mongo: no documents in result" {
 		// @Exception E7
 		return c.Status(fiber.StatusInternalServerError).JSON(&model.ErrorResponse{
 			Success: false,
@@ -231,32 +228,70 @@ func GoogleLoginNativeCallback(c *fiber.Ctx) error {
 			},
 		})
 	}
+	if singleResult.Err() != nil && singleResult.Err().Error() == "mongo: no documents in result" {
+		singleResult = mongo.Collection.Users.FindOneAndUpdate(
+			context.Background(),
+			bson.M{
+				"googleId": userInfo.ID,
+				"email":    userInfo.Email,
+			},
+			bson.M{
+				"$set": bson.M{
+					"device": bson.M{
+						"_id":      primitive.NewObjectID(),
+						"name":     body.DeviceName,
+						"fcmToken": body.FcmToken,
+					},
+					"isRegistered": false,
+					"language":     body.Language,
+					"updatedAt":    time.Now().UTC(),
+					"status":       model.Status.Active,
+				},
+			},
+			options.FindOneAndUpdate().SetUpsert(true),
+			options.FindOneAndUpdate().SetReturnDocument(options.After),
+		)
+		if singleResult.Err() != nil {
+			// @Exception E8
+			return c.Status(fiber.StatusInternalServerError).JSON(&model.ErrorResponse{
+				Success: false,
+				Error: &model.Error{
+					Code:    fiber.ErrInternalServerError.Code,
+					Message: fiber.ErrInternalServerError.Message,
+					Reason:  "E8",
+				},
+			})
+		}
+	}
 
 	var updatedUser *model.User
 	singleResult.Decode(&updatedUser)
 
-	fmt.Printf("Device ID %v \n", updatedUser.Device.ID)
-
-	accessToken, err := utils.GenerateAccessToken(&model.AccessTokenPayload{
-		Id:          updatedUser.ID.Hex(),
-		GoogleId:    userInfo.ID,
-		DeviceId:    updatedUser.Device.ID.Hex(),
-		Type:        constant.TOKEN_TYPE_USER,
-		FingerPrint: hex.EncodeToString(fingerprintHash.Sum(nil))[32:64],
-	})
+	accessToken, err := utils.GenerateAccessToken(
+		&utils.AccessTokenArgs{
+			Payload: &model.AccessTokenPayload{
+				Id:          updatedUser.ID.Hex(),
+				GoogleId:    userInfo.ID,
+				DeviceId:    updatedUser.Device.ID.Hex(),
+				Type:        constant.TOKEN_TYPE_USER,
+				FingerPrint: hex.EncodeToString(fingerprintHash.Sum(nil))[32:64],
+			},
+			Jwks:   config.Getenv("JWT_PRIVATE_KEY"),
+			Kid:    config.Getenv("JWT_KID"),
+			Secret: config.Getenv("JWT_SECRET_KEY"),
+		},
+	)
 	if err != nil {
-		// @Exception E8
+		// @Exception E9
 		return c.Status(fiber.StatusInternalServerError).JSON(&model.ErrorResponse{
 			Success: false,
 			Error: &model.Error{
 				Code:    fiber.ErrInternalServerError.Code,
 				Message: fiber.ErrInternalServerError.Message,
-				Reason:  "E8",
+				Reason:  "E9",
 			},
 		})
 	}
-
-	fmt.Printf("%v token", accessToken)
 
 	c.Set(constant.HEADER_X_EXPOSE_ACCESS_TOKEN, accessToken)
 	return c.Status(fiber.StatusOK).JSON(&model.DataResponse{

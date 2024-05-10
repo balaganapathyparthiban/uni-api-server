@@ -12,8 +12,11 @@ import (
 
 	"dev.balaganapathy/uni-api-server/utils"
 	"github.com/derpen/fastergoding"
+	"github.com/go-jose/go-jose/v3/json"
 	"github.com/joho/godotenv"
 )
+
+var properties = make(map[string]string)
 
 /* Init Method */
 func Init() {
@@ -42,30 +45,21 @@ func Init() {
 		os.Exit(1)
 	}()
 
-	/* Get Properties */
-	_, publicKey, privateKey := getProperties()
-
-	publicKeyDecrypted := utils.Decrypt(publicKey, Getenv("KEYVAULT_KEY"))
-	privateKeyDecrypted := utils.Decrypt(privateKey, Getenv("KEYVAULT_KEY"))
-
-	fmt.Println(publicKeyDecrypted)
-	fmt.Println(privateKeyDecrypted)
-
-	rvalue := utils.RSAEncrypt("test", publicKeyDecrypted, privateKeyDecrypted)
-	fmt.Println(rvalue)
-
-	rdvalue := utils.RSADecrypt(rvalue, publicKeyDecrypted, privateKeyDecrypted)
-	fmt.Println(rdvalue)
-}
-
-func getProperties() (string, string, string) {
-	urls := [3]string{
-		fmt.Sprintf("%s/app.properties", Getenv("KEYVAULT_URL")),
-		fmt.Sprintf("%s/keys/public.pem", Getenv("KEYVAULT_URL")),
-		fmt.Sprintf("%s/keys/private.pem", Getenv("KEYVAULT_URL")),
+	// load .env file
+	err := godotenv.Load(".env")
+	if err != nil {
+		fmt.Print("[ERROR][ENV][Getenv] Error loading .env file")
+		os.Exit(1)
 	}
 
-	properties := make(chan string)
+	/* Get Properties */
+	urls := [3]string{
+		fmt.Sprintf("%s/%s?v=1", Getenv("KEYVAULT_URL"), Getenv("APP_PROPERTIES_FILE")),
+		fmt.Sprintf("%s/keys/%s?v=1", Getenv("KEYVAULT_URL"), Getenv("PUBLIC_KEY_FILE")),
+		fmt.Sprintf("%s/keys/%s?v=1", Getenv("KEYVAULT_URL"), Getenv("PRIVATE_KEY_FILE")),
+	}
+
+	appProperties := make(chan string)
 	publicKey := make(chan string)
 	privateKey := make(chan string)
 
@@ -97,27 +91,30 @@ func getProperties() (string, string, string) {
 			}
 			value = string(bodyBytes)
 
-			if strings.Contains(url, "app.properties") {
-				properties <- value
+			if strings.Contains(url, Getenv("APP_PROPERTIES_FILE")) {
+				appProperties <- value
 			}
-			if strings.Contains(url, "public.pem") {
+			if strings.Contains(url, Getenv("PUBLIC_KEY_FILE")) {
 				publicKey <- value
 			}
-			if strings.Contains(url, "private.pem") {
+			if strings.Contains(url, Getenv("PRIVATE_KEY_FILE")) {
 				privateKey <- value
 			}
 		}(url)
 	}
 
-	return <-properties, <-publicKey, <-privateKey
+	dPublicKey := utils.Decrypt(<-publicKey, Getenv("KEYVAULT_KEY"))
+	dPrivateKey := utils.Decrypt(<-privateKey, Getenv("KEYVAULT_KEY"))
+	mProperties := utils.RSADecrypt(<-appProperties, dPublicKey, dPrivateKey)
+
+	json.Unmarshal([]byte(mProperties), &properties)
 }
 
 /* Get Env Method */
 func Getenv(key string) string {
-	// load .env file
-	err := godotenv.Load(".env")
-	if err != nil {
-		fmt.Print("[ERROR][ENV][Getenv] Error loading .env file")
+	if os.Getenv(key) != "" {
+		return os.Getenv(key)
+	} else {
+		return properties[key]
 	}
-	return os.Getenv(key)
 }
