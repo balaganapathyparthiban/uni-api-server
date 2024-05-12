@@ -11,11 +11,13 @@ import (
 )
 
 const (
-	users = "USERS"
+	admins = "ADMINS"
+	users  = "USERS"
 )
 
 var Collection struct {
-	Users *mongo.Collection
+	Admins *mongo.Collection
+	Users  *mongo.Collection
 }
 
 // CONNECT MONGODB FUNC
@@ -49,5 +51,6 @@ func ConnectMongoDB() {
 
 	db := client.Database("UNIDB")
 
+	Collection.Admins = db.Collection(admins)
 	Collection.Users = db.Collection(users)
 }

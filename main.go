@@ -3,9 +3,9 @@ package main
 import (
 	"strings"
 
+	"dev.balaganapathy/uni-api-server/app/admin"
 	"dev.balaganapathy/uni-api-server/app/auth"
 	"dev.balaganapathy/uni-api-server/app/user"
-	"dev.balaganapathy/uni-api-server/app/ws"
 	"dev.balaganapathy/uni-api-server/config"
 	"dev.balaganapathy/uni-api-server/constant"
 	"dev.balaganapathy/uni-api-server/database/memcached"
@@ -96,11 +96,11 @@ func main() {
 
 	api := app.Group("/api")
 
+	admin.SetupAdminRoute(api)
+
 	auth.SetupAuthRoute(api)
 
 	user.SetupUserRoute(api)
-
-	ws.SetupWebSocketRoute(api)
 
 	/*###############
 	### APP START ###

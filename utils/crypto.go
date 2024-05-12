@@ -24,6 +24,7 @@ type AccessTokenArgs struct {
 	Jwks        string
 	Kid         string
 	Secret      string
+	ExpiryAt    *jwt.NumericDate
 }
 
 func GenerateAccessToken(args *AccessTokenArgs) (string, error) {
@@ -64,7 +65,7 @@ func GenerateAccessToken(args *AccessTokenArgs) (string, error) {
 	cl := jwt.Claims{
 		Issuer:   "UNI",
 		IssuedAt: jwt.NewNumericDate(time.Now().UTC()),
-		Expiry:   jwt.NewNumericDate(time.Now().UTC().Add(90)),
+		Expiry:   args.ExpiryAt,
 	}
 
 	accessToken, err := jwt.SignedAndEncrypted(signer, enc).Claims(cl).Claims(args.Payload).CompactSerialize()
