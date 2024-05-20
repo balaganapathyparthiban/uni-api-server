@@ -40,11 +40,13 @@ type Device struct {
 }
 
 var Status = &struct {
-	Pending string
-	Active  string
-	Blocked string
+	Pending  string
+	Active   string
+	InActive string
+	Blocked  string
 }{
-	Pending: "PENDING",
-	Active:  "ACTIVE",
-	Blocked: "BLOCKED",
+	Pending:  "PENDING",
+	Active:   "ACTIVE",
+	InActive: "IN_ACTIVE",
+	Blocked:  "BLOCKED",
 }

@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"dev.balaganapathy/uni-api-server/app/admin"
-	"dev.balaganapathy/uni-api-server/app/auth"
 	"dev.balaganapathy/uni-api-server/app/user"
 	"dev.balaganapathy/uni-api-server/config"
 	"dev.balaganapathy/uni-api-server/constant"
@@ -97,8 +96,6 @@ func main() {
 	api := app.Group("/api")
 
 	admin.SetupAdminRoute(api)
-
-	auth.SetupAuthRoute(api)
 
 	user.SetupUserRoute(api)
 

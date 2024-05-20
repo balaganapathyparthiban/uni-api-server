@@ -27,11 +27,12 @@ type AdminPrivilege struct {
 }
 
 type Admin struct {
-	Type      string              `bson:"type" json:"type,omitempty"`
 	ID        *primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
+	Type      string              `bson:"type" json:"type,omitempty"`
 	GoogleId  string              `bson:"googleId" json:"googleId,omitempty"`
 	Email     string              `bson:"email,omitempty" json:"email,omitempty"`
 	Privilege *AdminPrivilege     `bson:"privilege,omitempty" json:"privilege,omitempty"`
+	Device    *Device             `bson:"device,omitempty" json:"device,omitempty"`
 	CreatedAt *time.Time          `bson:"createdAt,omitempty" json:"createdAt,omitempty"`
 	UpdatedAt *time.Time          `bson:"updatedAt,omitempty" json:"updatedAt,omitempty"`
 	Status    string              `bson:"status,omitempty" json:"status,omitempty"`

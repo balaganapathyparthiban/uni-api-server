@@ -107,7 +107,10 @@ func Init() {
 	dPrivateKey := utils.Decrypt(<-privateKey, Getenv("KEYVAULT_KEY"))
 	mProperties := utils.RSADecrypt(<-appProperties, dPublicKey, dPrivateKey)
 
-	json.Unmarshal([]byte(mProperties), &properties)
+	err = json.Unmarshal([]byte(mProperties), &properties)
+	if err != nil {
+		os.Exit(1)
+	}
 }
 
 /* Get Env Method */

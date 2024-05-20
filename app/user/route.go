@@ -9,11 +9,23 @@ import (
 func SetupUserRoute(router fiber.Router) {
 	user := router.Group("/user")
 
-	// Authorized Routes
+	// CONFIG
 	user.Get(
-		"/info",
+		"/config",
+		GetConfig,
+	)
+
+	// AUTH
+	user.Post(
+		"/google/login/native/callback",
+		GoogleLoginNativeCallback,
+	)
+
+	// PROFILE
+	user.Get(
+		"/profile",
 		middleware.AuthenticateRequest([]string{constant.TOKEN_TYPE_USER}),
-		GetUserInfo,
+		GetUserProfile,
 	)
 	user.Post(
 		"/profile",
@@ -21,8 +33,8 @@ func SetupUserRoute(router fiber.Router) {
 		UpdateUserProfile,
 	)
 	user.Post(
-		"/profile/registered",
+		"/profile/register",
 		middleware.AuthenticateRequest([]string{constant.TOKEN_TYPE_USER}),
-		updateUserProfileRegistered,
+		UpdateUserProfileRegister,
 	)
 }

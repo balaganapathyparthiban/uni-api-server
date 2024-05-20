@@ -25,7 +25,7 @@ type AccessTokenPayload struct {
 	GoogleId    string           `json:"googleId"`
 	DeviceId    string           `json:"deviceId"`
 	FingerPrint string           `json:"fingerPrint"`
-	Issuer      *string          `json:"iss"`
+	Issuer      string           `json:"iss"`
 	IssuedAt    *jwt.NumericDate `json:"iat"`
 }
 
